@@ -17,5 +17,6 @@ script:
     - python ./np-bench format -t png all.log
     - python ./np-bench format -t tex pythran.log
     - python ./np-bench format -t rst numba.log
+    - sort all.log
 
 

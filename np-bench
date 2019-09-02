@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 import re
+import sys
 import tempfile
 import os.path
 import random
@@ -39,10 +40,12 @@ class PythonExtractor(object):
         except NameError as n:
             raise RuntimeError('%s has invalid header' % filename)
 
-    def __call__(self, filename):
+    def __call__(self, where, filename):
         with open(filename) as fd:
             s, r, c = self.process_lines(filename, fd)
-            return s, r, ''.join(c)
+            with open(where, 'w') as dest:
+                dest.write(''.join(c))
+            return s, r
 
     def compile(self, filename):
         pass
@@ -112,6 +115,45 @@ class HopeExtractor(JitExtractor):
         self.decorator = '@hope.jit\n'
 
 
+class XtensorExtractor(PythonExtractor):
+    '''
+    Generate test case for xtensor from run and setup comment in a benchmark
+
+    Assumes the existence of a .cpp alongside the .py file
+    '''
+
+    name = 'xtensor'
+
+    def __call__(self, where, filename):
+        res = super().__call__(where, filename)
+        shutil.copy(filename[:-2] + 'cpp', where[:-2] + 'cpp')
+        return res
+
+    def compile(self, filename):
+        from numpy.distutils.core import setup
+        from numpy.distutils.extension import Extension
+
+        cwd = os.getcwd()
+        os.chdir(self.output_dir)
+
+        kernelname = os.path.basename(filename[:-3])
+        cpp = os.path.join(cwd, filename[:-3] + ".cpp")
+
+        try:
+            extension = Extension(kernelname,
+                                  [cpp],
+                                  include_dirs=[os.path.join("..","..","include")],
+                                  extra_compile_args=['-std=c++14', '-w'],
+                                 )
+            setup(name=kernelname,
+                  ext_modules=[extension],
+                  script_name='setup.py',
+                  script_args=[
+                      '--quiet',
+                      'build_ext'])
+        finally:
+            os.chdir(cwd)
+
 def run_generator(basedir, filenames, extractors):
     try:
         os.makedirs(basedir)
@@ -132,8 +174,7 @@ def run_generator(basedir, filenames, extractors):
             tmpmodule, _ = os.path.splitext(tmpfilename)
             where = os.path.join(location, tmpfilename)
             try:
-                setup, run, content = e(filename)
-                open(where, 'w').write(content)
+                setup, run = e(where, filename)
                 e.compile(where)
                 shelllines.append(
                     'printf "{function} {extractor} " '
@@ -147,6 +188,7 @@ def run_generator(basedir, filenames, extractors):
                         run=run,
                         extractor=extractor.name))
             except Exception as f:
+                print(f)
                 shelllines.append('echo "{function} {extractor} unsupported"'.format(function=function, extractor=extractor.name))
 
     # shuffle to hide locality effects
@@ -159,7 +201,7 @@ def run_generator(basedir, filenames, extractors):
     return shellscript
 
 
-default_targets=['python', 'pythran', 'numba', 'hope']
+default_targets=['python', 'pythran', 'numba', 'hope', 'xtensor']
 
 
 def run(args):
@@ -349,6 +391,10 @@ class CustomVenv(venv.EnvBuilder):
         self.requirements = kwargs.pop('requirements', [])
         super().__init__(*args, **kwargs)
 
+    def create(self, prefix, *args, **kwargs):
+        self.prefix = prefix
+        super().create(prefix, *args, **kwargs)
+
     def post_setup(self, context):
         self.python = context.env_exe
         if not self.requirements:
@@ -358,6 +404,59 @@ class CustomVenv(venv.EnvBuilder):
         pip('install', '-U', 'pip')
         pip('install', *self.requirements)
 
+        xtl = self.download_src("https://github.com/QuantStack/xtl/archive/0.6.5.zip")
+        self.cmake(xtl)
+
+        xsimd = self.download_src("https://github.com/QuantStack/xsimd/archive/7.2.6.zip")
+        self.cmake(xsimd)
+
+        xtensor = self.download_src("https://github.com/QuantStack/xtensor/archive/0.20.8.zip")
+        self.cmake(xtensor)
+
+        pybind11 = self.download_src("https://github.com/pybind/pybind11/archive/v2.3.0.zip")
+        self.cmake(pybind11,
+                  '-DPYTHON_EXECUTABLE={}'.format(self.python))
+
+        xpython = self.download_src("https://github.com/QuantStack/xtensor-python/archive/0.23.1.zip")
+        self.cmake(xpython,
+                  '-DPYTHON_EXECUTABLE={}'.format(self.python))
+
+        xblas = self.download_src("https://github.com/QuantStack/xtensor-blas/archive/0.16.1.zip")
+        self.cmake(xblas)
+
+
+
+    def download_src(self, url):
+        from io import BytesIO
+        from zipfile import ZipFile
+        from urllib.request import urlopen
+        resp = urlopen(url)
+        zipfile = ZipFile(BytesIO(resp.read()))
+        target_dir = os.path.join(self.prefix, "tmp", "download")
+        zipfile.extractall(target_dir)
+        return os.path.join(target_dir,
+                            zipfile.namelist()[0]).rstrip(os.path.sep)
+
+    def cmake(self, target, *args):
+        CMAKE_BIN_DIR = subprocess.check_output(
+            [self.python,
+             '-c',
+             'from cmake import CMAKE_BIN_DIR; print(CMAKE_BIN_DIR)'])
+        btarget = os.path.basename(target)
+        CMAKE_BIN_DIR = CMAKE_BIN_DIR.decode().strip()
+        cmake = os.path.join(CMAKE_BIN_DIR, "cmake")
+        build_dir = os.path.join(self.prefix, "tmp", "build", btarget)
+        os.makedirs(build_dir, exist_ok=True)
+        subprocess.check_call([cmake, os.path.join("..", "..", "download",
+                                                     btarget),
+                               "-DCMAKE_INSTALL_PREFIX={}".format(os.path.join(*([".."]
+                                                                              * 3))),
+                               *args],
+                              cwd=build_dir)
+        subprocess.check_call([cmake, "--build", "."], cwd=build_dir)
+        subprocess.check_call([cmake, "--build", ".", "--target", "install"], cwd=build_dir)
+
+
 def setup(args):
     builder = CustomVenv(with_pip=True,
                          requirements=[
@@ -365,6 +464,9 @@ def setup(args):
                              'numba',
                              'pythran',
                              'hope',
+                             #
+                             'cmake',
+                             'pytest',
                              #
                              'matplotlib',
                          ])
@@ -376,7 +478,6 @@ def setup(args):
 def main():
     import glob
     import argparse
-    import sys
     parser = argparse.ArgumentParser(prog='numpy-benchmarks',
                                      description='run synthetic numpy benchmarks',
                                      epilog="It's a megablast!")
