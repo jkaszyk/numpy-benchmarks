@@ -528,6 +528,10 @@ def main():
     run_parser.set_defaults(func=run)
     args = parser.parse_args(sys.argv[1:])
 
+    if getattr(args, 'func', None) is None:
+        parser.print_help()
+        sys.exit(1)
+
     if args.func is not setup and not args.in_venv:
         builder = CustomVenv(with_pip=True)
         builder.create(args.venv)
