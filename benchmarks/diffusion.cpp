@@ -34,7 +34,7 @@ void py_diffusion(pytensor<float, 2>& u, pytensor<float, 2>& tempU, int iterNum)
   return diffusion(u, tempU, iterNum);
 }
 
-PYBIND11_MODULE(diffusion, m)
+PYBIND11_MODULE(xtensor_diffusion, m)
 {
     import_numpy();
     m.def("diffusion", py_diffusion);

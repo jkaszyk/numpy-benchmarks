@@ -23,15 +23,15 @@ auto log_likelihood(Data const& data, double mean, double sigma)
   pdfs = pdfs / std::sqrt(2 * numeric_constants<double>::PI) * sigma;
 #endif
   pdfs = log(pdfs);
-  return sum(pdfs, xt::evaluation_strategy::immediate);
+  return sum(pdfs, xt::evaluation_strategy::immediate)();
 }
 
-pytensor<double, 1> py_log_likelihood(pytensor<double, 1>& data, double mean, double sigma)
+double py_log_likelihood(pytensor<double, 1> const& data, double mean, double sigma)
 {
   return log_likelihood(data, mean, sigma);
 }
 
-PYBIND11_MODULE(log_likelihood, m)
+PYBIND11_MODULE(xtensor_log_likelihood, m)
 {
     import_numpy();
     m.def("log_likelihood", py_log_likelihood);

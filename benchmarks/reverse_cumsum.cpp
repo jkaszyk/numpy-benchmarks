@@ -23,7 +23,7 @@ pytensor<double, 1> py_reverse_cumsum(pytensor<double, 1> const& x)
   return reverse_cumsum(x);
 }
 
-PYBIND11_MODULE(reverse_cumsum, m)
+PYBIND11_MODULE(xtensor_reverse_cumsum, m)
 {
     import_numpy();
     m.def("reverse_cumsum", py_reverse_cumsum);

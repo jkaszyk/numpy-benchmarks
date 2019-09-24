@@ -9,6 +9,7 @@ import glob
 import shutil
 import venv
 import subprocess
+import textwrap
 
 ###############################################################################
 # Run command
@@ -18,7 +19,7 @@ class PythonExtractor(object):
     Generate test case for Python from run and setup comment in a benchmark
     '''
 
-    name = 'Python'
+    name = 'python'
 
     def __init__(self, output_dir):
         self.re_setup = re.compile('^#setup: (.*)$')
@@ -97,7 +98,7 @@ class NumbaExtractor(JitExtractor):
     def __init__(self, output_dir):
         super(NumbaExtractor, self).__init__(output_dir)
         self.extra_import = 'import numba\n'
-        self.decorator = '@numba.jit\n'
+        self.decorator = '@numba.jit(nopython=True)\n'
 
 
 class HopeExtractor(JitExtractor):
@@ -142,6 +143,7 @@ class XtensorExtractor(PythonExtractor):
         try:
             extension = Extension(kernelname,
                                   [cpp],
+                                  libraries=["openblas"],
                                   include_dirs=[os.path.join("..","..","include")],
                                   extra_compile_args=['-std=c++14', '-w'],
                                  )
@@ -150,7 +152,8 @@ class XtensorExtractor(PythonExtractor):
                   script_name='setup.py',
                   script_args=[
                       '--quiet',
-                      'build_ext'])
+                      'build_ext',
+                      '--inplace'])
         finally:
             os.chdir(cwd)
 
@@ -164,7 +167,6 @@ def run_generator(basedir, filenames, extractors):
         dst.write(benchit)
 
     shelllines = []
-    cwd = os.getcwd()
     for extractor in extractors:
         e = extractor(location)
         for filename in filenames:
@@ -180,7 +182,6 @@ def run_generator(basedir, filenames, extractors):
                     'printf "{function} {extractor} " '
                     '&& {python} benchit.py -r 11 -n 40 -s "{setup}; from {module} import {function} ; {run}" "{run}"  '
                     '|| echo unsupported'.format(
-                        cwd=cwd,
                         python=sys.executable,
                         setup=setup,
                         module=tmpmodule,
@@ -188,7 +189,6 @@ def run_generator(basedir, filenames, extractors):
                         run=run,
                         extractor=extractor.name))
             except Exception as f:
-                print(f)
                 shelllines.append('echo "{function} {extractor} unsupported"'.format(function=function, extractor=extractor.name))
 
     # shuffle to hide locality effects
@@ -213,6 +213,95 @@ def run(args):
 
     script = run_generator(os.path.join(args.venv, "run"), args.benchmarks, args.targets)
     os.execl(script, script)
+
+###############################################################################
+# check command
+
+def check_generator(basedir, filenames, extractors):
+    try:
+        os.makedirs(basedir)
+    except FileExistsError:
+        pass
+    location = tempfile.mkdtemp(prefix='rundir_', dir=basedir)
+    with open(os.path.join(location, 'benchit.py'), 'w') as dst:
+        dst.write(benchit)
+
+    shelllines = []
+    for extractor in extractors:
+        e = extractor(location)
+        for filename in filenames:
+            basename = os.path.basename(filename)
+            function, _ = os.path.splitext(basename)
+            tmpfilename = '_'.join([extractor.name, basename])
+            tmpmodule, _ = os.path.splitext(tmpfilename)
+            where = os.path.join(location, tmpfilename)
+            try:
+                setup, run = e(where, filename)
+                e.compile(where)
+                shelllines.append(
+                    """
+{setup};
+from {module} import {function}
+try:
+    print("{function}", "{ename}...")
+    {run}
+    {ename}_{function}_res = res
+except:
+    {ename}_{function}_res = None
+
+                    """.format(
+                        setup=setup,
+                        module=tmpmodule,
+                        function=function,
+                        run=run,
+                        ename=extractor.name))
+
+            except Exception as f:
+                print(f)
+                shelllines.append('print("{function} {extractor} unsupported")'.format(function=function, extractor=extractor.name))
+                shelllines.append('{ename}_{function}_res = None'.format(function=function, ename=extractor.name))
+
+    # shuffle to hide locality effects
+    random.shuffle(shelllines)
+    shelllines = (['#!' + sys.executable,
+                   'nbp_failure = 0',
+                   'import os, sys',
+                   'os.chdir(os.path.dirname(sys.argv[0]))',
+                  ] + shelllines)
+
+    for extractor in extractors:
+        if extractor.name == "python":
+            continue
+        for filename in filenames:
+            basename = os.path.basename(filename)
+            function, _ = os.path.splitext(basename)
+            shelllines.append(
+"""
+import numpy
+if {ename}_{function}_res is not None and not numpy.allclose(python_{function}_res, {ename}_{function}_res):
+    print('check fail for {ename} {function}')
+    print('ref', python_{function}_res)
+    print('res', {ename}_{function}_res)
+    nbp_failure += 1""".format(ename=extractor.name, function=function))
+
+
+
+    shelllines.append("print('Number of failures: ', nbp_failure)")
+    shelllines.append("sys.exit(nbp_failure)")
+    shellscript = os.path.join(location, 'check.py')
+    open(shellscript, 'w').write('\n'.join(shelllines))
+    os.chmod(shellscript, stat.S_IXUSR | stat.S_IRUSR)
+    return shellscript
+
+def check(args):
+    if args.targets is None:
+        args.targets = default_targets
+    elif "python" not in args.targets:
+        args.targets.append("python")
+
+    global run_generator
+    run_generator = check_generator
+    run(args)
 
 
 ###############################################################################
@@ -526,6 +615,16 @@ def main():
     run_parser.add_argument('-t', action='append', dest='targets', metavar='TARGET',
                         help='target compilers to use, default is %s' % ', '.join(default_targets))
     run_parser.set_defaults(func=run)
+
+    check_parser = subparser.add_parser("check",
+                                      help="check a set of bench")
+    check_parser.add_argument('benchmarks', nargs='*',
+                        help='benchmark to check, default is benchmarks/*',
+                        default=glob.glob('benchmarks/*.py'))
+    check_parser.add_argument('-t', action='append', dest='targets', metavar='TARGET',
+                        help='target compilers to use, default is %s' % ', '.join(default_targets))
+    check_parser.set_defaults(func=check)
+
     args = parser.parse_args(sys.argv[1:])
 
     if getattr(args, 'func', None) is None:

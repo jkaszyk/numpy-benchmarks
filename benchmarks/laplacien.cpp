@@ -31,7 +31,7 @@ pytensor<double, 3> py_laplacien(pytensor<double, 3> const& image)
   return laplacien(image);
 }
 
-PYBIND11_MODULE(laplacien, m)
+PYBIND11_MODULE(xtensor_laplacien, m)
 {
     import_numpy();
     m.def("laplacien", py_laplacien);
