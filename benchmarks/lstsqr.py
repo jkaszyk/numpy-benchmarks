@@ -11,7 +11,7 @@ def lstsqr(x, y):
     dx = x - x_avg
     dy = y - y_avg
     var_x = np.sum(dx**2)
-    cov_xy = np.sum(dx * (y - y_avg))
+    cov_xy = np.sum(dx * dy)
     slope = cov_xy / var_x
     y_interc = y_avg - slope*x_avg
     return (slope, y_interc)
