@@ -5,7 +5,7 @@ addons:
         sources:
             - ubuntu-toolchain-r-test
         packages:
-            - libatlas-base-dev
+            - libopenblas-dev
 python:
   - "3.6"
   - "3.7"
