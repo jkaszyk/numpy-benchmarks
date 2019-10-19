@@ -493,13 +493,13 @@ class CustomVenv(venv.EnvBuilder):
         pip('install', '-U', 'pip')
         pip('install', *self.requirements)
 
-        xtl = self.download_src("https://github.com/QuantStack/xtl/archive/0.6.5.zip")
+        xtl = self.download_src("https://github.com/QuantStack/xtl/archive/0.6.7.zip")
         self.cmake(xtl)
 
         xsimd = self.download_src("https://github.com/QuantStack/xsimd/archive/7.2.6.zip")
         self.cmake(xsimd)
 
-        xtensor = self.download_src("https://github.com/QuantStack/xtensor/archive/0.20.8.zip")
+        xtensor = self.download_src("https://github.com/QuantStack/xtensor/archive/0.20.10.zip")
         self.cmake(xtensor)
 
         pybind11 = self.download_src("https://github.com/pybind/pybind11/archive/v2.3.0.zip")
