@@ -48,7 +48,7 @@ class PythonExtractor(object):
                 dest.write(''.join(c))
             return s, r
 
-    def compile(self, filename):
+    def compile(self, filename, verbose):
         pass
 
 
@@ -61,8 +61,10 @@ class PythranExtractor(PythonExtractor):
 
     name = 'pythran'
 
-    def compile(self, filename):
-        import pythran, os
+    def compile(self, filename, verbose):
+        import pythran, os, logging
+        if verbose:
+            pythran.toolchain.logger.setLevel(logging.INFO)
         cwd = os.getcwd()
         os.chdir(self.output_dir)
         try:
@@ -130,7 +132,7 @@ class XtensorExtractor(PythonExtractor):
         shutil.copy(filename[:-2] + 'cpp', where[:-2] + 'cpp')
         return res
 
-    def compile(self, filename):
+    def compile(self, filename, verbose):
         from numpy.distutils.core import setup
         from numpy.distutils.extension import Extension
 
@@ -145,19 +147,18 @@ class XtensorExtractor(PythonExtractor):
                                   [cpp],
                                   libraries=["openblas"],
                                   include_dirs=[os.path.join("..","..","include")],
-                                  extra_compile_args=['-std=c++14', '-w'],
+                                  extra_compile_args=['-std=c++14', '-w']
                                  )
+            script_args = [] if verbose else ['--quiet']
+            script_args.extend(['build_ext', '--inplace'])
             setup(name=kernelname,
                   ext_modules=[extension],
                   script_name='setup.py',
-                  script_args=[
-                      '--quiet',
-                      'build_ext',
-                      '--inplace'])
+                  script_args=script_args)
         finally:
             os.chdir(cwd)
 
-def run_generator(basedir, filenames, extractors):
+def run_generator(basedir, filenames, extractors, verbose):
     try:
         os.makedirs(basedir)
     except FileExistsError:
@@ -177,7 +178,7 @@ def run_generator(basedir, filenames, extractors):
             where = os.path.join(location, tmpfilename)
             try:
                 setup, run = e(where, filename)
-                e.compile(where)
+                e.compile(where, verbose)
                 shelllines.append(
                     'printf "{function} {extractor} " '
                     '&& {python} benchit.py -r 11 -n 40 -s "{setup}; from {module} import {function} ; {run}" "{run}"  '
@@ -211,13 +212,15 @@ def run(args):
     conv = lambda t: globals()[t.capitalize() + 'Extractor']
     args.targets = [conv(t) for t in args.targets]
 
-    script = run_generator(os.path.join(args.venv, "run"), args.benchmarks, args.targets)
+    script = run_generator(os.path.join(args.venv, "run"),
+                           args.benchmarks,
+                           args.targets, args.verbose)
     os.execl(script, script)
 
 ###############################################################################
 # check command
 
-def check_generator(basedir, filenames, extractors):
+def check_generator(basedir, filenames, extractors, verbose):
     try:
         os.makedirs(basedir)
     except FileExistsError:
@@ -237,7 +240,7 @@ def check_generator(basedir, filenames, extractors):
             where = os.path.join(location, tmpfilename)
             try:
                 setup, run = e(where, filename)
-                e.compile(where)
+                e.compile(where, verbose)
                 shelllines.append(
                     """
 {setup};
@@ -614,15 +617,19 @@ def main():
                         default=glob.glob('benchmarks/*.py'))
     run_parser.add_argument('-t', action='append', dest='targets', metavar='TARGET',
                         help='target compilers to use, default is %s' % ', '.join(default_targets))
+    run_parser.add_argument('-v', action='store_true', dest='verbose',
+                            help='enable verbose output')
     run_parser.set_defaults(func=run)
 
     check_parser = subparser.add_parser("check",
                                       help="check a set of bench")
     check_parser.add_argument('benchmarks', nargs='*',
-                        help='benchmark to check, default is benchmarks/*',
-                        default=glob.glob('benchmarks/*.py'))
+                              help='benchmark to check, default is benchmarks/*',
+                              default=glob.glob('benchmarks/*.py'))
     check_parser.add_argument('-t', action='append', dest='targets', metavar='TARGET',
-                        help='target compilers to use, default is %s' % ', '.join(default_targets))
+                              help='target compilers to use, default is %s' % ', '.join(default_targets))
+    check_parser.add_argument('-v', action='store_true', dest='verbose',
+                              help='enable verbose output')
     check_parser.set_defaults(func=check)
 
     args = parser.parse_args(sys.argv[1:])
