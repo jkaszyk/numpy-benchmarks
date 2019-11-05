@@ -5,7 +5,7 @@
 #pythran export grayscott(int, float, float, float, float, float[:,:], float[:,:])
 import numpy as np
 def grayscott(counts, Du, Dv, F, k, ru, rv):
-    n = 300
+    n = 280
     U = np.zeros((n+2,n+2), dtype=np.float32)
     V = np.zeros((n+2,n+2), dtype=np.float32)
     u, v = U[1:-1,1:-1], V[1:-1,1:-1]
