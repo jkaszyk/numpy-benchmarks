@@ -19,7 +19,7 @@ auto grouping(Values const& values)
 {
   auto diff = concatenate(xtuple(adapt(std::array<uint32_t, 1>{1}, {1}), xt::diff(values)));
   auto wdiff0 = where(diff)[0];
-  auto idx = concatenate(xtuple(adapt(wdiff0), adapt(std::array<uint32_t, 1>{values.size()}, {1})));
+  auto idx = concatenate(xtuple(wdiff0, adapt(std::array<uint32_t, 1>{values.size()}, {1})));
   return std::make_tuple(index_view(values, view(idx, range(xnone(), -1))), xt::diff(idx));
 }
 

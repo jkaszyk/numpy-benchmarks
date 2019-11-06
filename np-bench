@@ -142,7 +142,11 @@ class XtensorExtractor(PythonExtractor):
         kernelname = os.path.basename(filename[:-3])
         cpp = os.path.join(cwd, filename[:-3] + ".cpp")
 
+        # Numpy can pollute stdout with warning message which should be on stderr
+        old_stdout = sys.stdout
         try:
+            sys.stdout = sys.stderr
+
             extension = Extension(kernelname,
                                   [cpp],
                                   libraries=["openblas"],
@@ -156,6 +160,7 @@ class XtensorExtractor(PythonExtractor):
                   script_name='setup.py',
                   script_args=script_args)
         finally:
+            sys.stdout = old_stdout
             os.chdir(cwd)
 
 def run_generator(basedir, filenames, extractors, verbose):
@@ -189,7 +194,7 @@ def run_generator(basedir, filenames, extractors, verbose):
                         function=function,
                         run=run,
                         extractor=extractor.name))
-            except Exception as f:
+            except:
                 shelllines.append('echo "{function} {extractor} unsupported"'.format(function=function, extractor=extractor.name))
 
     # shuffle to hide locality effects
@@ -259,8 +264,7 @@ except:
                         run=run,
                         ename=extractor.name))
 
-            except Exception as f:
-                print(f)
+            except:
                 shelllines.append('print("{function} {extractor} unsupported")'.format(function=function, extractor=extractor.name))
                 shelllines.append('{ename}_{function}_res = None'.format(function=function, ename=extractor.name))
 
@@ -329,7 +333,11 @@ def read_data(log, normalize='Python'):
         except:
             testcase, compiler, _ = line.split()
             best = average = 0
-        averages.setdefault(compiler, dict())[testcase] = int(average)
+        try:
+            iaverage = int(average)
+        except:
+            iaverage = 0
+        averages.setdefault(compiler, dict())[testcase] = iaverage
         testcases.add(testcase)
         compilers.add(compiler)
 
