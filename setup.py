@@ -1,8 +1,23 @@
-import sys, os, glob, shutil
+import sys, os, glob
 import setuptools
 
 from setuptools import setup
 from setuptools.command.install import install
+from setuptools.command.build_py import build_py
+
+class my_build_py(build_py):
+
+    def run(self, *args, **kwargs):
+        # regular build done by parent class
+        build_py.run(self, *args, **kwargs)
+        if not self.dry_run:  # compatibility with the parent options
+            self.copy_pkg(os.path.join('numpy_benchmarks', 'benchmarks'))
+
+    def copy_pkg(self, pkg):
+        import shutil
+        target = os.path.join(self.build_lib, pkg)
+        shutil.rmtree(target, True)
+        shutil.copytree(pkg, target)
 
 class my_install(install):
     def run(self):
@@ -71,6 +86,8 @@ setup(
     license="BSD 3-Clause",
     install_requires=open('requirements.txt').read().splitlines(),
     packages=['numpy_benchmarks', 'numpy_benchmarks/benchmarks'],
+    package_data={'numpy_benchmarks/benchmarks':
+                  ['numpy_benchmarks/benchmarks/*.cpp']},
     scripts=['numpy_benchmarks/np-bench'],
-    cmdclass=dict(install=my_install),
+    cmdclass={'install': my_install, 'build_py': my_build_py},
 )
