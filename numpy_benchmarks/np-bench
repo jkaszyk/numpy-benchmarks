@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#!/home/sguelton/.venvs/tmp/bin/python
 import re
 import sys
 import tempfile
@@ -7,9 +7,10 @@ import random
 import stat
 import glob
 import shutil
-import venv
 import subprocess
 import textwrap
+
+import numpy_benchmarks
 
 ###############################################################################
 # Run command
@@ -217,10 +218,17 @@ def run(args):
     conv = lambda t: globals()[t.capitalize() + 'Extractor']
     args.targets = [conv(t) for t in args.targets]
 
-    script = run_generator(os.path.join(args.venv, "run"),
+    script = run_generator(os.path.join(sys.prefix, "run"),
                            args.benchmarks,
                            args.targets, args.verbose)
     os.execl(script, script)
+
+###############################################################################
+# list command
+
+def list_bench(args):
+    for benchmark in numpy_benchmarks.benchmarks:
+        print(benchmark)
 
 ###############################################################################
 # check command
@@ -316,7 +324,7 @@ def check(args):
 
 def clean(args):
 
-    for d in glob.glob(os.path.join(args.venv, "run", "rundir_*")):
+    for d in glob.glob(os.path.join(sys.prefix, "run", "rundir_*")):
         shutil.rmtree(d)
 
 
@@ -478,99 +486,6 @@ def format(args):
         dumper(dump_plot, flavor=args.type, normalize=args.normalize)
 
 
-###############################################################################
-# setup command
-
-
-class CustomVenv(venv.EnvBuilder):
-    '''
-    Virtual environment for the installation.
-    Install wheel in the venv for packaging.
-    '''
-    def __init__(self, *args, **kwargs):
-        self.requirements = kwargs.pop('requirements', [])
-        super().__init__(*args, **kwargs)
-
-    def create(self, prefix, *args, **kwargs):
-        self.prefix = prefix
-        super().create(prefix, *args, **kwargs)
-
-    def post_setup(self, context):
-        self.python = context.env_exe
-        if not self.requirements:
-            return
-        def pip(*args):
-            subprocess.run([self.python, '-m', 'pip', *args], check=True)
-        pip('install', '-U', 'pip')
-        pip('install', *self.requirements)
-
-        xtl = self.download_src("https://github.com/QuantStack/xtl/archive/0.6.7.zip")
-        self.cmake(xtl)
-
-        xsimd = self.download_src("https://github.com/QuantStack/xsimd/archive/7.2.6.zip")
-        self.cmake(xsimd)
-
-        xtensor = self.download_src("https://github.com/QuantStack/xtensor/archive/0.20.10.zip")
-        self.cmake(xtensor)
-
-        pybind11 = self.download_src("https://github.com/pybind/pybind11/archive/v2.3.0.zip")
-        self.cmake(pybind11,
-                  '-DPYTHON_EXECUTABLE={}'.format(self.python))
-
-        xpython = self.download_src("https://github.com/QuantStack/xtensor-python/archive/0.23.1.zip")
-        self.cmake(xpython,
-                  '-DPYTHON_EXECUTABLE={}'.format(self.python))
-
-        xblas = self.download_src("https://github.com/QuantStack/xtensor-blas/archive/0.16.1.zip")
-        self.cmake(xblas)
-
-
-
-    def download_src(self, url):
-        from io import BytesIO
-        from zipfile import ZipFile
-        from urllib.request import urlopen
-        resp = urlopen(url)
-        zipfile = ZipFile(BytesIO(resp.read()))
-        target_dir = os.path.join(self.prefix, "tmp", "download")
-        zipfile.extractall(target_dir)
-        return os.path.join(target_dir,
-                            zipfile.namelist()[0]).rstrip(os.path.sep)
-
-    def cmake(self, target, *args):
-        CMAKE_BIN_DIR = subprocess.check_output(
-            [self.python,
-             '-c',
-             'from cmake import CMAKE_BIN_DIR; print(CMAKE_BIN_DIR)'])
-        btarget = os.path.basename(target)
-        CMAKE_BIN_DIR = CMAKE_BIN_DIR.decode().strip()
-        cmake = os.path.join(CMAKE_BIN_DIR, "cmake")
-        build_dir = os.path.join(self.prefix, "tmp", "build", btarget)
-        os.makedirs(build_dir, exist_ok=True)
-        subprocess.check_call([cmake, os.path.join("..", "..", "download",
-                                                     btarget),
-                               "-DCMAKE_INSTALL_PREFIX={}".format(os.path.join(*([".."]
-                                                                              * 3))),
-                               *args],
-                              cwd=build_dir)
-        subprocess.check_call([cmake, "--build", "."], cwd=build_dir)
-        subprocess.check_call([cmake, "--build", ".", "--target", "install"], cwd=build_dir)
-
-
-def setup(args):
-    builder = CustomVenv(with_pip=True,
-                         requirements=[
-                             'numpy',
-                             'numba',
-                             'pythran',
-                             'hope',
-                             #
-                             'cmake',
-                             'pytest',
-                             #
-                             'matplotlib',
-                         ])
-    builder.create(args.venv)
 
 ###############################################################################
 # main
@@ -578,21 +493,15 @@ def setup(args):
 def main():
     import glob
     import argparse
+
     parser = argparse.ArgumentParser(prog='numpy-benchmarks',
                                      description='run synthetic numpy benchmarks',
                                      epilog="It's a megablast!")
-    parser.add_argument("--venv", default=".npb")
-    parser.add_argument("--in-venv", action='store_true',
-                        help=argparse.SUPPRESS)
 
     subparser = parser.add_subparsers()
     clean_parser = subparser.add_parser("clean",
                                         help="clean previous bench")
     clean_parser.set_defaults(func=clean)
-
-    setup_parser = subparser.add_parser("setup",
-                                        help="setup bench environment")
-    setup_parser.set_defaults(func=setup)
 
     format_parser = subparser.add_parser("format",
                                          help="format the output of a bench")
@@ -622,18 +531,22 @@ def main():
                                       help="run a set of bench")
     run_parser.add_argument('benchmarks', nargs='*',
                         help='benchmark to run, default is benchmarks/*',
-                        default=glob.glob('benchmarks/*.py'))
+                        default=numpy_benchmarks.benchmarks)
     run_parser.add_argument('-t', action='append', dest='targets', metavar='TARGET',
                         help='target compilers to use, default is %s' % ', '.join(default_targets))
     run_parser.add_argument('-v', action='store_true', dest='verbose',
                             help='enable verbose output')
     run_parser.set_defaults(func=run)
 
+    list_parser = subparser.add_parser("list",
+                                      help="list available benchmarks")
+    list_parser.set_defaults(func=list_bench)
+
     check_parser = subparser.add_parser("check",
                                       help="check a set of bench")
     check_parser.add_argument('benchmarks', nargs='*',
                               help='benchmark to check, default is benchmarks/*',
-                              default=glob.glob('benchmarks/*.py'))
+                              default=numpy_benchmarks.benchmarks)
     check_parser.add_argument('-t', action='append', dest='targets', metavar='TARGET',
                               help='target compilers to use, default is %s' % ', '.join(default_targets))
     check_parser.add_argument('-v', action='store_true', dest='verbose',
@@ -645,12 +558,6 @@ def main():
     if getattr(args, 'func', None) is None:
         parser.print_help()
         sys.exit(1)
-
-    if args.func is not setup and not args.in_venv:
-        builder = CustomVenv(with_pip=True)
-        builder.create(args.venv)
-        new_args = [builder.python, "./np-bench", "--in-venv"] + sys.argv[1:]
-        os.execl(builder.python, *new_args)
 
     args.func(args)
 
