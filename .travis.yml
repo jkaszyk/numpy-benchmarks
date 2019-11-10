@@ -17,9 +17,9 @@ install:
 
 script:
     - np-bench list
-    - np-bench run > all.log
+    - np-bench run -o all.log
     - np-bench run -tpythran > pythran.log
-    - np-bench run -tnumba benchmarks/arc_distance.py > numba.log
+    - np-bench run -tnumba benchmarks/arc_distance.py -o numba.log
     - np-bench format -t png all.log
     - np-bench format -t tex pythran.log
     - np-bench format -t rst numba.log
