@@ -218,7 +218,12 @@ def run(args):
     args.targets = [conv(t) for t in args.targets]
 
     script = run_generator(args.benchmarks,
-                           args.targets, args.verbose)
+                           args.targets,
+                           args.verbose)
+
+    if args.output:
+        fdout = os.open(args.output, os.O_WRONLY|os.O_CREAT|os.O_TRUNC)
+        os.dup2(fdout, 1)
     os.execl(script, script)
 
 ###############################################################################
@@ -532,6 +537,8 @@ def main():
                         help='target compilers to use, default is %s' % ', '.join(default_targets))
     run_parser.add_argument('-v', action='store_true', dest='verbose',
                             help='enable verbose output')
+    run_parser.add_argument('-o', dest='output',
+                            help='output path')
     run_parser.set_defaults(func=run)
 
     list_parser = subparser.add_parser("list",
@@ -547,6 +554,8 @@ def main():
                               help='target compilers to use, default is %s' % ', '.join(default_targets))
     check_parser.add_argument('-v', action='store_true', dest='verbose',
                               help='enable verbose output')
+    check_parser.add_argument('-o', dest='output',
+                            help='output path')
     check_parser.set_defaults(func=check)
 
     args = parser.parse_args(sys.argv[1:])
