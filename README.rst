@@ -25,13 +25,13 @@ To list available benchmarks::
 
 To run the whole benchmark suite and save the output::
 
-    > np-bench run | tee run.log
+    > np-bench run -o run.log
 
 
-To post-process the output of ``./np-bench run``, for
+To post-process the output of ``np-bench run``, for
 instance to plot the result as ``png``::
 
-    > np-bench format  -tpng run.log
+    > np-bench format -tpng run.log
 
 Kernels
 =======
