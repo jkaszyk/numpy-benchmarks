@@ -1,5 +1,5 @@
 #from http://stackoverflow.com/questions/26823312/numba-or-cython-acceleration-in-reaction-diffusion-algorithm
-#setup: import numpy as np; np.random.seed(0); ru = np.random.random((300,300)); rv = np.random.random((300,300))
+#setup: import numpy as np; np.random.seed(0); ru = np.random.random((280,280)); rv = np.random.random((280,280))
 #run: grayscott(40, 0.16, 0.08, 0.04, 0.06, ru, rv)
 
 #pythran export grayscott(int, float, float, float, float, float[:,:], float[:,:])

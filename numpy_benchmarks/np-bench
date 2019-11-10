@@ -12,6 +12,8 @@ import textwrap
 
 import numpy_benchmarks
 
+npb_prefix = 'np_bench_rundir_'
+
 ###############################################################################
 # Run command
 
@@ -151,7 +153,8 @@ class XtensorExtractor(PythonExtractor):
             extension = Extension(kernelname,
                                   [cpp],
                                   libraries=["openblas"],
-                                  include_dirs=[os.path.join("..","..","include")],
+                                  include_dirs=[os.path.join(sys.prefix,
+                                                             'include')],
                                   extra_compile_args=['-std=c++14', '-w']
                                  )
             script_args = [] if verbose else ['--quiet']
@@ -164,12 +167,8 @@ class XtensorExtractor(PythonExtractor):
             sys.stdout = old_stdout
             os.chdir(cwd)
 
-def run_generator(basedir, filenames, extractors, verbose):
-    try:
-        os.makedirs(basedir)
-    except FileExistsError:
-        pass
-    location = tempfile.mkdtemp(prefix='rundir_', dir=basedir)
+def run_generator(filenames, extractors, verbose):
+    location = tempfile.mkdtemp(prefix=npb_prefix)
     with open(os.path.join(location, 'benchit.py'), 'w') as dst:
         dst.write(benchit)
 
@@ -218,8 +217,7 @@ def run(args):
     conv = lambda t: globals()[t.capitalize() + 'Extractor']
     args.targets = [conv(t) for t in args.targets]
 
-    script = run_generator(os.path.join(sys.prefix, "run"),
-                           args.benchmarks,
+    script = run_generator(args.benchmarks,
                            args.targets, args.verbose)
     os.execl(script, script)
 
@@ -233,12 +231,8 @@ def list_bench(args):
 ###############################################################################
 # check command
 
-def check_generator(basedir, filenames, extractors, verbose):
-    try:
-        os.makedirs(basedir)
-    except FileExistsError:
-        pass
-    location = tempfile.mkdtemp(prefix='rundir_', dir=basedir)
+def check_generator(filenames, extractors, verbose):
+    location = tempfile.mkdtemp(prefix=npb_prefix)
     with open(os.path.join(location, 'benchit.py'), 'w') as dst:
         dst.write(benchit)
 
@@ -323,8 +317,10 @@ def check(args):
 # clean command
 
 def clean(args):
-
-    for d in glob.glob(os.path.join(sys.prefix, "run", "rundir_*")):
+    rundir = tempfile.mkdtemp(prefix=npb_prefix)
+    targets = rundir[:rundir.rfind(npb_prefix) + len(npb_prefix)] + '*'
+    print("Cleaning", targets)
+    for d in glob.glob(targets):
         shutil.rmtree(d)
 
 

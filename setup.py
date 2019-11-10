@@ -22,28 +22,30 @@ class my_build_py(build_py):
 class my_install(install):
     def run(self):
         install.run(self)
-        #self.post_install()
+        self.post_install()
 
     def post_install(self):
-        xtl = self.download_src("https://github.com/QuantStack/xtl/archive/0.6.7.zip")
-        self.cmake(xtl)
+        import tempfile
+        with tempfile.TemporaryDirectory() as self.tmpdir:
+            xtl = self.download_src("https://github.com/QuantStack/xtl/archive/0.6.7.zip")
+            self.cmake(xtl)
 
-        xsimd = self.download_src("https://github.com/QuantStack/xsimd/archive/7.2.6.zip")
-        self.cmake(xsimd)
+            xsimd = self.download_src("https://github.com/QuantStack/xsimd/archive/7.2.6.zip")
+            self.cmake(xsimd)
 
-        xtensor = self.download_src("https://github.com/QuantStack/xtensor/archive/0.20.10.zip")
-        self.cmake(xtensor)
+            xtensor = self.download_src("https://github.com/QuantStack/xtensor/archive/0.20.10.zip")
+            self.cmake(xtensor)
 
-        pybind11 = self.download_src("https://github.com/pybind/pybind11/archive/v2.3.0.zip")
-        self.cmake(pybind11,
-                  '-DPYTHON_EXECUTABLE={}'.format(sys.executable))
+            pybind11 = self.download_src("https://github.com/pybind/pybind11/archive/v2.3.0.zip")
+            self.cmake(pybind11,
+                      '-DPYTHON_EXECUTABLE={}'.format(sys.executable))
 
-        xpython = self.download_src("https://github.com/QuantStack/xtensor-python/archive/0.23.1.zip")
-        self.cmake(xpython,
-                  '-DPYTHON_EXECUTABLE={}'.format(sys.executable))
+            xpython = self.download_src("https://github.com/QuantStack/xtensor-python/archive/0.23.1.zip")
+            self.cmake(xpython,
+                      '-DPYTHON_EXECUTABLE={}'.format(sys.executable))
 
-        xblas = self.download_src("https://github.com/QuantStack/xtensor-blas/archive/0.16.1.zip")
-        self.cmake(xblas)
+            xblas = self.download_src("https://github.com/QuantStack/xtensor-blas/archive/0.16.1.zip")
+            self.cmake(xblas)
 
     def download_src(self, url):
         from io import BytesIO
@@ -51,7 +53,7 @@ class my_install(install):
         from urllib.request import urlopen
         resp = urlopen(url)
         zipfile = ZipFile(BytesIO(resp.read()))
-        target_dir = os.path.join(self.prefix, "tmp", "download")
+        target_dir = os.path.join(self.tmpdir, "download")
         zipfile.extractall(target_dir)
         return os.path.join(target_dir,
                             zipfile.namelist()[0]).rstrip(os.path.sep)
@@ -65,7 +67,7 @@ class my_install(install):
         btarget = os.path.basename(target)
         CMAKE_BIN_DIR = CMAKE_BIN_DIR.decode().strip()
         cmake = os.path.join(CMAKE_BIN_DIR, "cmake")
-        build_dir = os.path.join(self.prefix, "tmp", "build", btarget)
+        build_dir = os.path.join(self.tmpdir, "build", btarget)
         os.makedirs(build_dir, exist_ok=True)
         subprocess.check_call([cmake, os.path.join("..", "..", "download",
                                                      btarget),
