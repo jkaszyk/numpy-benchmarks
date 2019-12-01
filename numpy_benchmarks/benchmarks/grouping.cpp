@@ -18,9 +18,10 @@ template<typename Values>
 auto grouping(Values const& values)
 {
   auto diff = concatenate(xtuple(adapt(std::array<uint32_t, 1>{1}, {1}), xt::diff(values)));
-  auto wdiff0 = where(diff)[0];
-  auto idx = concatenate(xtuple(wdiff0, adapt(std::array<uint32_t, 1>{values.size()}, {1})));
-  return std::make_tuple(index_view(values, view(idx, range(xnone(), -1))), xt::diff(idx));
+  auto vwdiff0 = where(diff)[0];
+  auto wdiff0 = adapt(vwdiff0, {vwdiff0.size()});
+  auto idx = eval(concatenate(xtuple(wdiff0, adapt(std::array<uint32_t, 1>{values.size()}, {1}))));
+  return std::make_tuple(eval(index_view(values, view(idx, range(xnone(), -1)))), xt::diff(idx));
 }
 
 std::tuple<pytensor<uint32_t, 1>, pytensor<uint32_t, 1>> py_grouping(pytensor<uint32_t, 1> const& values)
