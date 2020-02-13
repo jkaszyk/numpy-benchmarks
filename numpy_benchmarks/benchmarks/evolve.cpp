@@ -15,7 +15,6 @@ using namespace xt;
 template<typename Grid>
 auto laplacian(Grid const& grid)
 {
-  // see https://github.com/xtensor-stack/xtensor/issues/1766
   return roll(grid, +1, 0) + roll(grid, -1, 0) + roll(grid, +1, 1) + roll(grid, -1, 1) - 4 * grid;
 }
 
