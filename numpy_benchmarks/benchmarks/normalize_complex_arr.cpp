@@ -16,8 +16,8 @@ using namespace xt;
 template<typename A>
 auto normalize_complex_arr(A const & a)
 {
-  auto a_oo = a - amin(real(a)) - std::complex<double>{0., 1.} * amin(imag(a));
-  return a_oo / amax(abs(a_oo));
+  auto a_oo = a - amin(real(a))() - std::complex<double>{0., 1.} * amin(imag(a))();
+  return eval(a_oo / amax(abs(a_oo))());
 }
 
 pytensor<std::complex<double>, 1> py_normalize_complex_arr(pytensor<std::complex<double>, 1> const& a)
