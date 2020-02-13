@@ -22,7 +22,7 @@ auto laplacien(Image const& image)
                        view(image, range(1, -1), range(2, xnone())));
   auto valmax_tmp = amax(out_image, evaluation_strategy::immediate)(); // see https://github.com/QuantStack/xtensor/issues/1744
   auto valmax = std::max(1.,valmax_tmp)+1.e-9;
-  out_image = out_image / valmax; // see https://github.com/QuantStack/xtensor-python/issues/203
+  out_image /= valmax;
   return out_image;
 }
 
