@@ -15,12 +15,13 @@ using namespace xt;
 template<typename X>
 auto create_grid(X const& x)
 {
-  auto N = x.shape()[0];
-  xtensor<double, 3> z = zeros<double>({N, N, 3L});
-  // see https://github.com/xtensor-stack/xtensor/issues/1795
-  view(z, all(), all(), 0) = x.reshape({-1, 1});
-  view(z, all(), all(), 1) = x;
-  auto fast_grid = z.reshape({N * N, 3L});
+  xarray<double> x_t = x;
+  auto N = x_t.shape()[0];
+  using shape_type = decltype(N);
+  xarray<double> z = zeros<double>({N, N, (shape_type)3});
+  view(z, all(), all(), 0) = x_t.reshape({N , (shape_type)1});
+  view(z, all(), all(), 1) = x_t.reshape({N});
+  auto fast_grid = z.reshape({N * N, (shape_type)3});
   return fast_grid;
 }
 
