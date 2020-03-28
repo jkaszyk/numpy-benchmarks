@@ -18,7 +18,7 @@ auto pairwise(Pts const& pts)
   return eval(sqrt(sum(square(view(pts, newaxis(), all()) - view(pts, all(), newaxis())), /*axis=*/-1)));
 }
 
-pytensor<double, 1> py_pairwise(pytensor<double, 2> const& pts)
+pytensor<double, 2> py_pairwise(pytensor<double, 2> const& pts)
 {
   return pairwise(pts);
 }
