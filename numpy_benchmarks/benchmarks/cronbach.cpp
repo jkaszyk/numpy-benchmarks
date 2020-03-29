@@ -15,10 +15,10 @@ using namespace xt;
 template<typename ItemScores>
 auto cronbach(ItemScores const& itemscores)
 {
-  auto itemvars = itemscores.var(axis=1, ddof=1); // see https://github.com/QuantStack/xtensor/issues/1731
-  auto tscores = itemscores.sum(axis=0);
-  auto nitems = len(itemscores);
-  auto nitems / (nitems-1) * (1 - itemvars.sum() / tscores.var(ddof=1));
+  auto itemvars = variance(itemscores, /*axis=*/{1}, /*ddof=*/1);
+  auto tscores = sum(itemscores, /*axis=*/{0});
+  double nitems = itemscores.shape()[0];
+  return nitems / (nitems - 1) * (1 - sum(itemvars) / variance(tscores, /*ddof=*/1))[0];
 }
 
 double py_cronbach(pytensor<double, 2> const& itemscores)
@@ -26,8 +26,8 @@ double py_cronbach(pytensor<double, 2> const& itemscores)
   return cronbach(itemscores);
 }
 
-PYBIND11_MODULE(xtensor_itemscores, m)
+PYBIND11_MODULE(xtensor_cronbach, m)
 {
     import_numpy();
-    m.def("itemscores", py_itemscores);
+    m.def("cronbach", py_cronbach);
 }
