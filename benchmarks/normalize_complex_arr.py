@@ -1,6 +1,10 @@
 import numpy as np
 #from: https://stackoverflow.com/questions/41576536/normalizing-complex-values-in-numpy-python
-#setup: import numpy as np; np.random.seed(0); N = 10000; x = np.random.random(N) + 1j *  np.random.random(N)
+def data(np):
+    import numpy as np
+    np.random.seed(0)
+    N = 10000
+    x = np.random.random(N) + 1j *  np.random.random(N)
 #run: normalize_complex_arr(x)
 
 #pythran export normalize_complex_arr(complex[])

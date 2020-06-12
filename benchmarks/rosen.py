@@ -1,4 +1,6 @@
-#setup: import numpy as np; r = np.arange(1000000, dtype=float)
+def data(np):
+    import numpy as np
+    r = np.arange(1000000, dtype=float)
 #run: rosen(r)
 import numpy as np
 

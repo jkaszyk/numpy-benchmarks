@@ -1,5 +1,6 @@
 #from https://github.com/sklam/numba-example-wavephysics
-#setup: N=4000
+def data(np):
+    N=4000
 #run: wave(N)
 import numpy as np
 from math import ceil

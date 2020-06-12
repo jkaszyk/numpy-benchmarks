@@ -1,5 +1,6 @@
 #from http://stackoverflow.com/questions/26823312/numba-or-cython-acceleration-in-reaction-diffusion-algorithm
-#setup: pass
+def data(np):
+    pass
 #run: grayscott(40, 0.16, 0.08, 0.04, 0.06)
 
 #pythran export grayscott(int, float, float, float, float)

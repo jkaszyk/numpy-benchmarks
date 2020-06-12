@@ -1,5 +1,7 @@
 #from: http://people.duke.edu/~ccc14/sta-663-2016/03A_Numbers.html#Example:-Calculating-pairwise-distance-matrix-using-broadcasting-and-vectorization
-#setup: import numpy as np ; X = np.linspace(0,10,20000).reshape(200,100)
+def data(np):
+    import numpy as np 
+    X = np.linspace(0,10,20000).reshape(200,100)
 #run: pairwise(X)
 
 #pythran export pairwise(float [][])

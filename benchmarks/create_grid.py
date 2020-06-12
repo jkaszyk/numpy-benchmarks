@@ -1,6 +1,9 @@
 #from: http://stackoverflow.com/questions/13815719/creating-grid-with-numpy-performance
 #pythran export create_grid(float [])
-#setup: import numpy as np ; N = 800 ; x = np.arange(0,1,1./N)
+def data(np):
+    import numpy as np 
+    N = 800 
+    x = np.arange(0,1,1./N)
 #run: create_grid(x)
 import numpy as np
 def create_grid(x):
