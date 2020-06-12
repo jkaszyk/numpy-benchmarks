@@ -22,7 +22,7 @@ def runner_numpy(res):
 
 posts = {"numpy": runner_numpy, "cupy": runner_cupy, "delayrepay":
     runner_delayrepay}
-benchmarks = glob.glob("benchmarks/*.py")
+benchmarks = sys.argv[1:]
 
 for benchmark in benchmarks:
     for lib in libs:
@@ -33,7 +33,7 @@ for benchmark in benchmarks:
         try:
             data = mod.data(np)
             def runner():
-                res = mod.func(np, *data)
+                res = mod.func(np, data)
                 posts[lib.__name__](res)
 
             times = timeit.repeat(runner, repeat=1, number=1)
