@@ -33,7 +33,7 @@ for benchmark in benchmarks:
         try:
             data = mod.data(np)
             def runner():
-                res = mod.func(np, data)
+                res = mod.func(np, *data)
                 posts[lib.__name__](res)
 
             times = timeit.repeat(runner, repeat=1, number=1)
