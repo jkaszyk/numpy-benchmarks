@@ -1,10 +1,11 @@
 #from http://stackoverflow.com/questions/77999777799977/numpy-vs-cython-speed
 #pythran export multiple_sum(float[][])
 def data(np):
-    import numpy as np 
     r = np.random.rand(100,100)
+    return r
 #run: multiple_sum(r)
-import numpy as np
+np = None
+
 def multiple_sum(array):
 
     rows = array.shape[0]
@@ -16,3 +17,7 @@ def multiple_sum(array):
         out[row, :] = np.sum(array - array[row, :], 0)
 
     return out
+
+def func(inp, data):
+    np=inp
+    return multiple_sum(data)

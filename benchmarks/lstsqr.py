@@ -1,12 +1,12 @@
 def data(np):
-    import numpy as np 
     N = 500000 
     X, Y = np.random.rand(N), np.random.rand(N)
+    return (X, Y)
 #run: lstsqr(X, Y)
 #from: http://nbviewer.ipython.org/github/rasbt/One-Python-benchmark-per-day/blob/master/ipython_nbs/day10_fortran_lstsqr.ipynb
 
 #pythran export lstsqr(float[], float[])
-import numpy as np
+np = None
 def lstsqr(x, y):
     """ Computes the least-squares solution to a linear matrix equation. """
     x_avg = np.average(x)
@@ -18,3 +18,7 @@ def lstsqr(x, y):
     slope = cov_xy / var_x
     y_interc = y_avg - slope*x_avg
     return (slope, y_interc)
+
+def func(inp, data):
+    np = inp
+    return lstsqr(*data)

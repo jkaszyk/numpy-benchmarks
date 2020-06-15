@@ -1,12 +1,11 @@
 #from: parakeet testbed
 def data(np):
-    import numpy as np 
     M, N = 512, 512 
     I = np.random.randn(M,N)
+    return I
 #run: harris(I)
 
 #pythran export harris(float64[][])
-import numpy as np
 
 
 
@@ -32,3 +31,6 @@ def harris(I):
   det = A * B - C * C
   k = 0.05
   return det - k * tr * tr
+
+def func(np, data):
+    return harris(data)

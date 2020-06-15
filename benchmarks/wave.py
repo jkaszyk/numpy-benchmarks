@@ -1,8 +1,9 @@
 #from https://github.com/sklam/numba-example-wavephysics
 def data(np):
     N=4000
+    return N
 #run: wave(N)
-import numpy as np
+np = None
 from math import ceil
 
 def physics(masspoints, dt, plunk, which):
@@ -53,3 +54,7 @@ def wave(PARTICLE_COUNT):
     plunk_pos = count // 2
     physics( masspoints, 1./ (SUBDIVISION * FRAMERATE), f, plunk_pos)
     return masspoints[0, count // 2]
+
+def func(inp, data):
+    np = inp
+    return wave(data)

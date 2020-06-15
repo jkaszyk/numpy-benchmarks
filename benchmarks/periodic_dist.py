@@ -1,13 +1,14 @@
 def data(np):
-    import numpy as np 
     N = 20 
     x = y = z = np.arange(0., N, 0.1) 
     L = 4 
     periodic = True
+    return (x,x,x,L, periodic, periodic, periodic)
 #run: periodic_dist(x, x, x, L,periodic, periodic, periodic)
 
 #pythran export periodic_dist(float [], float[], float[], int, bool, bool, bool)
-import numpy as np 
+np = None
+
 
 def periodic_dist(x, y, z, L, periodicX, periodicY, periodicZ):
     " ""Computes distances between all particles and places the result in a matrix such that the ij th matrix entry corresponds to the distance between particle i and j"" "
@@ -39,3 +40,7 @@ def periodic_dist(x, y, z, L, periodicX, periodicY, periodicZ):
     d[d==0] = -1
 
     return d, dx, dy, dz
+
+def func(inp, data):
+    np = inp
+    return periodic_dist(*data)

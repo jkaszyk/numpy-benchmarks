@@ -1,12 +1,12 @@
 #from: https://github.com/iskandr/parakeet/blob/master/benchmarks/nd_local_maxima.py
 def data(np):
-    import numpy as np 
     shape = (5,4,3,2) 
     x = np.arange(120, dtype=np.float64).reshape(*shape)
+    return data
 #run: local_maxima(x)
 
 #pythran export local_maxima(float [][][][])
-import numpy as np
+np = None
 
 def wrap(pos, offset, bound):
     return ( pos + offset ) % bound
@@ -28,3 +28,7 @@ def local_maxima(data, mode=wrap):
       neighbor_idx = tuple(mode(p, o-w//2, w) for (p, o, w) in zip(pos, offset, wsize))
       result[pos] &= (data[neighbor_idx] <= myval)
   return result
+
+def func(inp, data):
+    np = inp
+    return local_maxima(data)
