@@ -4,7 +4,7 @@ def data(np):
 #run: grayscott(40, 0.16, 0.08, 0.04, 0.06)
 
 #pythran export grayscott(int, float, float, float, float)
-import numpy as np
+np = None
 def grayscott(counts, Du, Dv, F, k):
     n = 300
     U = np.zeros((n+2,n+2), dtype=np.float32)
@@ -30,3 +30,7 @@ def grayscott(counts, Du, Dv, F, k):
         v += Dv*Lv + uvv - (F + k)*v
 
     return V
+    
+def func(imp, data):
+    np = imp
+    return grayscott(40, 0.16, 0.08, 0.04, 0.06)

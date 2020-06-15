@@ -1,14 +1,14 @@
 def data(np):
     n=1000 
-    import numpy as np
     np.random.seed(0)
     db = np.array(np.random.randint(2, size=(n, 4)), dtype=bool)
+    return db
+
 #run: check_mask(db)
 #from: http://stackoverflow.com/questions/34500913/numba-slower-for-numpy-bitwise-and-on-boolean-arrays
 
-#pythran export check_mask(bool[][])
-import numpy as np
-def check_mask(db, mask=[1, 0, 1]):
+#pythran eport check_mask(bool[][])
+def func(np, db, mask=[1, 0, 1]):
     out = np.zeros(db.shape[0],dtype=bool)
     for idx, line in enumerate(db):
         target, vector = line[0], line[1:]
@@ -16,3 +16,4 @@ def check_mask(db, mask=[1, 0, 1]):
             if target == 1:
                 out[idx] = 1
     return out
+

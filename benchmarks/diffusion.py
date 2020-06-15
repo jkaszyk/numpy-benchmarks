@@ -4,13 +4,13 @@ def data(np):
    u=np.zeros([lx,ly],dtype=np.double)
    u[lx//2,ly//2]=1000.0
    tempU=np.zeros([lx,ly],dtype=np.double)
+   return tempU
 #run: diffusion(u,tempU,100)
 
-#pythran export diffusion(float [][], float [][], int)
-import numpy as np
 
 
-def diffusion(u, tempU, iterNum):
+#NOPE
+def diffusion(u, tempU, iterNum=10):
     """
     Apply Numpy matrix for the Forward-Euler Approximation
     """

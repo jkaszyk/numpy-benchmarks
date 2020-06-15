@@ -5,8 +5,9 @@ def data(np):
     np.random.seed(0)
     N = 600 
     items = np.random.rand(N,N)
+    return items
 #run: cronbach(items)
-def cronbach(itemscores):
+def func(np, itemscores):
     itemvars = itemscores.var(axis=1, ddof=1)
     tscores = itemscores.sum(axis=0)
     nitems = len(itemscores)

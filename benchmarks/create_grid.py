@@ -4,9 +4,9 @@ def data(np):
     import numpy as np 
     N = 800 
     x = np.arange(0,1,1./N)
+    return x
 #run: create_grid(x)
-import numpy as np
-def create_grid(x):
+def func(np, x):
     N = x.shape[0]
     z = np.zeros((N, N, 3))
     z[:,:,0] = x.reshape(-1,1)
