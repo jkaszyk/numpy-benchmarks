@@ -16,4 +16,4 @@ def repeating(x, nvar_y):
 
 def func(inp, data):
     np = inp
-    return repeating(np, data, 20)
+    return repeating( data, 20)

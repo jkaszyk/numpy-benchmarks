@@ -17,4 +17,4 @@ def laplacien(image):
 
 def func(imp, data):
     np = imp
-    return laplacien(np)
+    return laplacien(data)

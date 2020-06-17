@@ -2,7 +2,7 @@
 def data(np):
     shape = (5,4,3,2) 
     x = np.arange(120, dtype=np.float64).reshape(*shape)
-    return data
+    return x
 #run: local_maxima(x)
 
 #pythran export local_maxima(float [][][][])
