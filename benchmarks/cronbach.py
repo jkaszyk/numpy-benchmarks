@@ -1,7 +1,6 @@
 #from: http://stackoverflow.com/questions/20799403/improving-performance-of-cronbach-alpha-code-python-numpy
 #pythran export cronbach(float [][])
 def data(np):
-    import numpy as np 
     np.random.seed(0)
     N = 600 
     items = np.random.rand(N,N)
