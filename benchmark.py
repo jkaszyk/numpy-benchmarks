@@ -7,8 +7,10 @@ import timeit
 import string
 
 def runner_delayrepay(res):
-    res.run()
-    cupy.cuda.Device().synchronize()
+    import delayrepay
+    if isinstance(res, delayrepay.DelayArray):
+        res.run() 
+    delayrepay.cuda.Device().synchronize()
 
 def runner_cupy(res):
     import cupy
@@ -32,6 +34,7 @@ libs = [importlib.import_module(name) for name in args.libs.split( ',')]
 benchmarks = args.files
 
 for benchmark in benchmarks:
+    eprint(benchmark)
     for lib in libs:
         benchname = os.path.basename(benchmark)
         mod_path = benchmark[:-3].replace("/", ".")
@@ -46,10 +49,6 @@ for benchmark in benchmarks:
 
             times = timeit.repeat(runner, repeat=1, number=1)
             print(f"{benchname}, {lib.__name__}, {','.join(map(str, times))}")
-        except (NameError, AttributeError) as ex:
-            eprint("Non conforming")
-            eprint(ex)
-            print(f"{benchname}, {lib.__name__}, N/A")
         except (ValueError, TypeError) as ex:
             eprint("probably unsupported by cupy")
             eprint(ex)
