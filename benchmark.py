@@ -57,7 +57,7 @@ for benchmark in benchmarks:
                 res = mod.func(lib, data)
                 posts[lib.__name__](res)
 
-            times = timeit.repeat(runner, repeat=1, number=1)
+            times = timeit.repeat(runner, repeat=10, number=1)
             print(f"{benchname}, {lib.__name__}, {','.join(map(str, times))}")
         except (ValueError, TypeError) as ex:
             eprint("probably unsupported by cupy")
