@@ -9,7 +9,9 @@ import string
 
 blacklist = ['make_decision.py',
             'multiple_sum.py',
-            'normalize_complex_arr.py'
+            'normalize_complex_arr.py',
+            'slowparts.py',
+            'wdist.py'
             ]
 
 def runner_delayrepay(res):
@@ -41,7 +43,7 @@ benchmarks = args.files
 
 for benchmark in benchmarks:
     benchname = os.path.basename(benchmark)
-    if benchname in blacklist:
+    if benchname in blacklist and len(benchmarks) > 1:
         continue
     mod_path = benchmark[:-3].replace("/", ".")
     mod = importlib.import_module(mod_path)
