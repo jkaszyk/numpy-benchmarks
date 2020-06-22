@@ -6,6 +6,12 @@ import glob
 import timeit
 import string
 
+
+blacklist = ['make_decision.py',
+            'multiple_sum.py',
+            'normalize_complex_arr.py'
+            ]
+
 def runner_delayrepay(res):
     import delayrepay
     if isinstance(res, delayrepay.DelayArray):
@@ -34,11 +40,13 @@ libs = [importlib.import_module(name) for name in args.libs.split( ',')]
 benchmarks = args.files
 
 for benchmark in benchmarks:
+    benchname = os.path.basename(benchmark)
+    if benchname in blacklist:
+        continue
+    mod_path = benchmark[:-3].replace("/", ".")
+    mod = importlib.import_module(mod_path)
     eprint(benchmark)
     for lib in libs:
-        benchname = os.path.basename(benchmark)
-        mod_path = benchmark[:-3].replace("/", ".")
-        mod = importlib.import_module(mod_path)
         mod.np=lib
         mod.numpy=lib
         try:
