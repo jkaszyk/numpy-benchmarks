@@ -7,8 +7,10 @@ def data(np):
 #run: check_mask(db)
 #from: http://stackoverflow.com/questions/34500913/numba-slower-for-numpy-bitwise-and-on-boolean-arrays
 
+np = None
 #pythran eport check_mask(bool[][])
-def func(np, db, mask=[1, 0, 1]):
+def func(nump, db, mask=[1, 0, 1]):
+    mask = np.array(mask)
     out = np.zeros(db.shape[0],dtype=bool)
     for idx, line in enumerate(db):
         target, vector = line[0], line[1:]

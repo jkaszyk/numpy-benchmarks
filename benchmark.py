@@ -7,11 +7,13 @@ import timeit
 import string
 
 
-blacklist = ['make_decision.py',
+blacklist = ['check_mask.py',
+            'make_decision.py',
             'multiple_sum.py',
             'normalize_complex_arr.py',
             'slowparts.py',
-            'wdist.py'
+            'wdist.py',
+            'periodic_dist.py'
             ]
 
 def runner_delayrepay(res):
@@ -63,3 +65,4 @@ for benchmark in benchmarks:
             eprint("probably unsupported by cupy")
             eprint(ex)
             print(f"{benchname}, {lib.__name__}, N/A")
+            raise
