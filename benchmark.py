@@ -5,7 +5,7 @@ import os.path
 import glob
 import timeit
 import string
-
+import shutil
 
 blacklist = ['check_mask.py',
             'make_decision.py',
@@ -13,7 +13,8 @@ blacklist = ['check_mask.py',
             'normalize_complex_arr.py',
             'slowparts.py',
             'wdist.py',
-            'periodic_dist.py'
+            'periodic_dist.py',
+            'diffusion.py'
             ]
 
 def runner_delayrepay(res):
@@ -51,6 +52,11 @@ for benchmark in benchmarks:
     mod = importlib.import_module(mod_path)
     eprint(benchmark)
     for lib in libs:
+        try:
+            os.system('rm -fr ~/.nv/ComputeCache')
+            os.system('rm -fr ~/.cupy/kernel_cache')
+        except OSError as ex:
+            eprint(ex)
         mod.np=lib
         mod.numpy=lib
         try:
