@@ -22,6 +22,7 @@ def runner_delayrepay(res):
     if isinstance(res, delayrepay.DelayArray):
         res.run() 
     delayrepay.cuda.Device().synchronize()
+    delayrepay.reset()
 
 def runner_cupy(res):
     import cupy
