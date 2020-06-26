@@ -6,8 +6,8 @@ BEGIN {
 } 
 {
     min=9999999999999;
-    max=0;
-    for(i=3;i<=NF;i++){
+    max=$3;
+    for(i=4;i<=NF;i++){
         NUM=NUM?NUM+$i:$i;
         if ( $i < min ) {
             min=$i;
@@ -17,5 +17,5 @@ BEGIN {
         }
     };
     $(NF+1)=NUM;
-    print $1,$2,min,max,NUM/10; NUM=""  
+    print $1,$2,min,max,NUM/9; NUM=""  
 }
