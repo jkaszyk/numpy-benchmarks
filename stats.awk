@@ -2,6 +2,7 @@
 
 BEGIN { 
     FS=","; 
+    print "benchmark", "library", "min", "max", "average";
 } 
 {
     min=9999999999999;
