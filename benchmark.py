@@ -45,6 +45,8 @@ libs = [importlib.import_module(name) for name in args.libs.split( ',')]
 
 benchmarks = args.files
 
+print("benchmark,library,t1,t2,t3,t4,t5,t6,t7,t8,t9,t10")
+
 for benchmark in benchmarks:
     benchname = os.path.basename(benchmark)
     if benchname in blacklist and len(benchmarks) > 1:
@@ -67,7 +69,7 @@ for benchmark in benchmarks:
                 posts[lib.__name__](res)
 
             times = timeit.repeat(runner, repeat=10, number=1)
-            print(f"{benchname}, {lib.__name__}, {','.join(map(str, times))}")
+            print(f"{benchname[:-3]}, {lib.__name__}, {','.join(map(str, times))}")
         except (ValueError, TypeError) as ex:
             eprint("probably unsupported by cupy")
             eprint(ex)
