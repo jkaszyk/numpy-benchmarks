@@ -1,6 +1,6 @@
 #from: https://stackoverflow.com/questions/55854611/efficient-way-of-vectorizing-distance-calculation/55877642#55877642
 def data(np):
-    N = 800
+    N = 240
     x = np.random.rand(N,N)
     y = np.random.rand(N,N)
     return (x,y)
