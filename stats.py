@@ -27,6 +27,12 @@ ax.set_xticklabels(ax.get_xticklabels(), rotation=45,
     horizontalalignment='right')
 plt.savefig('speedup.png')
 
+
+dr.set_index('benchmark')
+cupy.set_index('benchmark')
+
+joined = dr.join(cupy, lsuffix='dr', rsuffix='c')
+
 comb.to_latex('results.tex', columns=['benchmark', 'library', 'wmean', 'np_speedup'],
     index=False, header=['Benchmark', 'Library', 'Mean execution time (s)',
     'Speedup'])
