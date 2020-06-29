@@ -73,5 +73,5 @@ for benchmark in benchmarks:
         except (ValueError, TypeError) as ex:
             eprint("probably unsupported by cupy")
             eprint(ex)
-            print(f"{benchname}, {lib.__name__}, N/A")
+            print(f"{benchname[:-3]}, {lib.__name__}, N/A")
             raise
