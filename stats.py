@@ -28,5 +28,6 @@ ax.set_xticklabels(ax.get_xticklabels(), rotation=45,
 plt.savefig('speedup.png')
 
 comb.to_latex('results.tex', columns=['benchmark', 'library', 'wmean', 'np_speedup'],
-    index=False)
+    index=False, header=['Benchmark', 'Library', 'Mean execution time (s)',
+    'Speedup'])
 
